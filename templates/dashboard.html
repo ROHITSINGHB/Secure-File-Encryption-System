@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="dashboard">
+  <h2>Welcome, {{ username }}!</h2>
+
+  <section class="form-section">
+    <h3>Encrypt File</h3>
+    <form action="{{ url_for('encrypt') }}" method="POST" enctype="multipart/form-data" id="encryptForm">
+      <input type="file" name="file" required /><br />
+      <input type="password" name="password" placeholder="Your password" required /><br />
+      <button type="submit">Encrypt</button>
+    </form>
+  </section>
+
+  <section class="form-section">
+    <h3>Decrypt File</h3>
+    <form action="{{ url_for('decrypt') }}" method="POST" enctype="multipart/form-data" id="decryptForm">
+      <input type="file" name="file" required /><br />
+      <input type="password" name="password" placeholder="Your password" required /><br />
+      <button type="submit">Decrypt</button>
+    </form>
+  </section>
+</section>
+{% endblock %}
