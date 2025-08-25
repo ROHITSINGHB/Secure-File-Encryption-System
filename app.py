@@ -17,10 +17,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # === MongoDB connection ===
 # Set your MongoDB URI here; example for local MongoDB:
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+
+MONGO_URI = os.getenv("MONGO_URI")  # set in Render dashboard
 client = MongoClient(MONGO_URI)
-db = client.security_db               # Database name
-users_col = db.users                  # Collection name
+db = client["mydatabase"]
+users_col = db["users"]
+
 
 # ==== Helper Functions ====
 def hash_password(password):
