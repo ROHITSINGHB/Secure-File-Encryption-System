@@ -1,43 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{% block title %}Secure App{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Secure App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css)">
+    <link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+    <link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap)" rel="stylesheet">
 </head>
 <body>
-<header>
-  <h1>Secure File Encryption System</h1>
-  <nav>
-    {% if session.user %}
-      Logged in as {{ session.user }} |
-      <a href="{{ url_for('dashboard') }}">Dashboard</a> |
-      <a href="{{ url_for('logout') }}">Logout</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">Login</a> |
-      <a href="{{ url_for('register') }}">Register</a>
-    {% endif %}
-  </nav>
-</header>
-
-<main>
-  <ul class="messages">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </ul>
-
-  {% block content %}{% endblock %}
-</main>
-
-<footer>
-  <p>&copy; 2025 Secure App</p>
-</footer>
+{% block content %}{% endblock %}
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </body>
 </html>
