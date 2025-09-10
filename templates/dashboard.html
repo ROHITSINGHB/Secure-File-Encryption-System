@@ -1,25 +1,144 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+
 {% block content %}
-<section class="dashboard">
-  <h2>Welcome, {{ username }}!</h2>
+<div class="dashboard-layout">
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-shield-halved"></i>
+            <h1>SecureFile</h1>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="nav-link active" data-view="dashboard-view"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="#" class="nav-link" data-view="encryption-view"><i class="fas fa-lock"></i><span>Encrypt/Decrypt</span></a></li>
+            <li><a href="#" class="nav-link" data-view="how-it-works-view"><i class="fas fa-book-open"></i><span>How It Works</span></a></li>
+        </ul>
+    </nav>
+    <div class="main-container">
+        <header class="dashboard-header">
+            <div class="header-title">
+                <h2>Welcome, {{ session.user }}!</h2>
+            </div>
+            <div class="profile-container">
+                <div class="profile-icon" id="profileIcon">
+                    {{ session.user[0]|upper }}
+                </div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-header">
+                        <strong>{{ session.user }}</strong>
+                        <small>{{ email }}</small>
+                    </div>
+                    <ul>
+                        <li><a href="#" class="nav-link" data-view="profile-view"><i class="fas fa-user"></i> Your Profile</a></li>
+                        <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+        <main class="content-area">
+            <ul class="messages-toast" id="toast-container">
+                <!-- Dynamic toasts will be added here -->
+            </ul>
+            
+            <section id="dashboard-view" class="dashboard-view active">
+              <h2>Dashboard Overview</h2>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <i class="fas fa-file-zipper"></i>
+                  <h3>Files Encrypted</h3>
+                  <p id="encrypted-count">{{ files_encrypted }}</p>
+                </div>
+                 <div class="stat-card">
+                  <i class="fas fa-key"></i>
+                  <h3>Files Decrypted</h3>
+                  <p id="decrypted-count">{{ files_decrypted }}</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-user-shield"></i>
+                    <h3>Account Status</h3>
+                    <p>Active</p>
+                </div>
+              </div>
+              <div class="quick-actions">
+                  <h3>Quick Actions</h3>
+                  <p>Jump right into encrypting or decrypting your files.</p>
+                  <button class="nav-link-button" data-view="encryption-view">Go to Encrypt/Decrypt <i class="fas fa-arrow-right"></i></button>
+              </div>
+            </section>
 
-  <section class="form-section">
-    <h3>Encrypt File</h3>
-    <form action="{{ url_for('encrypt') }}" method="POST" enctype="multipart/form-data" id="encryptForm">
-      <input type="file" name="file" required /><br />
-      <input type="password" name="password" placeholder="Your password" required /><br />
-      <button type="submit">Encrypt</button>
-    </form>
-  </section>
+            <section id="encryption-view" class="dashboard-view">
+              <h2>Encrypt & Decrypt Files</h2>
+              <div class="crypto-container">
+                <div class="form-section-card">
+                  <h3><i class="fas fa-lock"></i> Encrypt File</h3>
+                  <form action="{{ url_for('encrypt') }}" method="POST" enctype="multipart/form-data" id="encryptForm">
+                    <div class="file-upload-area" id="encryptDropArea">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <p>Drag & drop your file here, or click to browse</p>
+                      <span class="file-name"></span>
+                    </div>
+                    <input type="file" name="file" id="encryptFile" required style="display: none;" />
+                    <input type="password" name="password" placeholder="Enter a strong password" required /><br />
+                    <button type="submit" id="encryptButton">
+                      Encrypt File
+                      <span class="loading-spinner"></span>
+                    </button>
+                  </form>
+                </div>
+                <div class="form-section-card">
+                  <h3><i class="fas fa-key"></i> Decrypt File</h3>
+                  <form action="{{ url_for('decrypt') }}" method="POST" enctype="multipart/form-data" id="decryptForm">
+                    <div class="file-upload-area" id="decryptDropArea">
+                      <i class="fas fa-cloud-download-alt"></i>
+                      <p>Drag & drop your .enc file here, or click to browse</p>
+                      <span class="file-name"></span>
+                    </div>
+                    <input type="file" name="file" id="decryptFile" required style="display: none;" />
+                    <input type="password" name="password" placeholder="Enter the decryption password" required /><br />
+                    <button type="submit" id="decryptButton">
+                      Decrypt File
+                      <span class="loading-spinner"></span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </section>
 
-  <section class="form-section">
-    <h3>Decrypt File</h3>
-    <form action="{{ url_for('decrypt') }}" method="POST" enctype="multipart/form-data" id="decryptForm">
-      <input type="file" name="file" required /><br />
-      <input type="password" name="password" placeholder="Your password" required /><br />
-      <button type="submit">Decrypt</button>
-    </form>
-  </section>
-</section>
+            <section id="how-it-works-view" class="dashboard-view">
+              <h2>How SecureFile Works</h2>
+              <div class="info-card">
+                <h3><i class="fas fa-shield-alt"></i> Our Encryption Process</h3>
+                <p>We use a robust, industry-standard encryption algorithm called <strong>Fernet (AES-128 in CBC mode)</strong> to protect your files. Here’s a simple breakdown of the process:</p>
+                <ol>
+                  <li><strong>Key Generation:</strong> When you provide a password, we use a secure hashing algorithm (SHA-256) to derive a strong encryption key. Your original password is never stored.</li>
+                  <li><strong>Encryption:</strong> The generated key is used to scramble the contents of your file. The output is a completely unreadable `.enc` file.</li>
+                  <li><strong>Decryption:</strong> To decrypt a file, you must provide the exact same password. If the key matches, the system can reverse the process, restoring your file.</li>
+                </ol>
+                <div class="security-note">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Important:</strong> If you forget your password, there is no way to recover an encrypted file. It is cryptographically secure, even from us.
+                </div>
+              </div>
+            </section>
+
+            <section id="profile-view" class="dashboard-view">
+              <h2>User Profile</h2>
+              <div class="profile-details-card">
+                <h3>Your Details</h3>
+                <div class="detail-item">
+                  <label>Username</label>
+                  <p>{{ username }}</p>
+                </div>
+                <div class="detail-item">
+                  <label>Email Address</label>
+                  <p>{{ email }}</p>
+                </div>
+                 <div class="detail-item">
+                  <label>Password</label>
+                  <button class="small-button" onclick="window.location.href='{{ url_for('reset') }}'">Change Password</button>
+                </div>
+              </div>
+            </section>
+        </main>
+    </div>
+</div>
 {% endblock %}
