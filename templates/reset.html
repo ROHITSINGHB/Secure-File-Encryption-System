@@ -1,17 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Reset Password{% endblock %}
+
 {% block content %}
-<section class="form-section">
-  <h2>Reset Password</h2>
-  <form method="POST" id="resetForm">
-    <label for="username">Username</label>
-    <input type="text" name="username" id="username" required autofocus />
+<div class="auth-layout">
+    <div class="auth-left-panel">
+        <h1><i class="fas fa-key icon"></i> Reset Password</h1>
+        <p>Regain access to your SecureFile account by setting a new password.</p>
+    </div>
+    <div class="auth-right-panel">
+        <div class="auth-form-card">
+            <h2>Reset Password</h2>
+             <p style="text-align: center; margin-top: -1rem; margin-bottom: 2rem; color: #6c757d;">
+                Enter your username and a new password.
+            </p>
+            <form method="POST" id="resetForm">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required autofocus placeholder="Your existing username" />
 
-    <label for="new_password">New Password</label>
-    <input type="password" name="new_password" id="new_password" required />
+                <label for="new_password">New Password</label>
+                <input type="password" name="new_password" id="new_password" required placeholder="Enter a new, strong password" />
 
-    <button type="submit">Reset Password</button>
-  </form>
-  <p>Remembered password? <a href="{{ url_for('login') }}">Login here</a></p>
-</section>
+                <button type="submit">Reset Password</button>
+            </form>
+            <div class="links">
+               Remembered your password? <a href="{{ url_for('login') }}">Login here</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
