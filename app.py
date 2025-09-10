@@ -1,8 +1,7 @@
 import os
 import hashlib
 import base64
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import sqlite3
 from flask import (
     Flask, render_template, request, redirect, url_for,
     session, flash, send_file
@@ -16,16 +15,17 @@ app.secret_key = os.environ.get("SECRET_KEY", "change_this_secret_key")
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# === PostgreSQL connection ===
-DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this automatically
+# === SQLite Database ===
+DATABASE_PATH = "users.db"
 
 def get_db_connection():
     """Get database connection"""
     try:
-        connection = psycopg2.connect(DATABASE_URL)
+        connection = sqlite3.connect(DATABASE_PATH)
+        connection.row_factory = sqlite3.Row  # This makes rows behave like dictionaries
         return connection
     except Exception as e:
-        print(f"Error connecting to PostgreSQL: {e}")
+        print(f"Error connecting to SQLite: {e}")
         return None
 
 def init_database():
@@ -36,10 +36,10 @@ def init_database():
             cursor = connection.cursor()
             create_table_query = """
             CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(255) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                email VARCHAR(255) NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                email TEXT NOT NULL,
                 failed_attempts INTEGER DEFAULT 0,
                 locked BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -51,7 +51,6 @@ def init_database():
         except Exception as e:
             print(f"Error creating table: {e}")
         finally:
-            cursor.close()
             connection.close()
 
 # Initialize database on startup
@@ -65,8 +64,8 @@ def get_user(username):
     connection = get_db_connection()
     if connection:
         try:
-            cursor = connection.cursor(cursor_factory=RealDictCursor)
-            query = "SELECT * FROM users WHERE username = %s"
+            cursor = connection.cursor()
+            query = "SELECT * FROM users WHERE username = ?"
             cursor.execute(query, (username,))
             user = cursor.fetchone()
             return dict(user) if user else None
@@ -74,7 +73,6 @@ def get_user(username):
             print(f"Error getting user: {e}")
             return None
         finally:
-            cursor.close()
             connection.close()
     return None
 
@@ -91,7 +89,7 @@ def verify_user(username, password):
         cursor = connection.cursor()
         if user["password"] == hash_password(password):
             # Reset failed attempts on successful login
-            query = "UPDATE users SET failed_attempts = 0 WHERE username = %s"
+            query = "UPDATE users SET failed_attempts = 0 WHERE username = ?"
             cursor.execute(query, (username,))
             connection.commit()
             return True
@@ -99,7 +97,7 @@ def verify_user(username, password):
             # Increment failed attempts
             failed_attempts = user.get("failed_attempts", 0) + 1
             locked = failed_attempts >= 5
-            query = "UPDATE users SET failed_attempts = %s, locked = %s WHERE username = %s"
+            query = "UPDATE users SET failed_attempts = ?, locked = ? WHERE username = ?"
             cursor.execute(query, (failed_attempts, locked, username))
             connection.commit()
             return False
@@ -107,7 +105,6 @@ def verify_user(username, password):
         print(f"Error verifying user: {e}")
         return False
     finally:
-        cursor.close()
         connection.close()
 
 def create_user(username, password, email):
@@ -122,7 +119,7 @@ def create_user(username, password, email):
         cursor = connection.cursor()
         query = """
         INSERT INTO users (username, password, email, failed_attempts, locked) 
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (?, ?, ?, ?, ?)
         """
         cursor.execute(query, (username, hash_password(password), email, 0, False))
         connection.commit()
@@ -131,7 +128,6 @@ def create_user(username, password, email):
         print(f"Error creating user: {e}")
         return False
     finally:
-        cursor.close()
         connection.close()
 
 def reset_password(username, new_password):
@@ -142,8 +138,8 @@ def reset_password(username, new_password):
     try:
         cursor = connection.cursor()
         query = """
-        UPDATE users SET password = %s, failed_attempts = 0, locked = FALSE 
-        WHERE username = %s
+        UPDATE users SET password = ?, failed_attempts = 0, locked = 0 
+        WHERE username = ?
         """
         cursor.execute(query, (hash_password(new_password), username))
         connection.commit()
@@ -152,7 +148,6 @@ def reset_password(username, new_password):
         print(f"Error resetting password: {e}")
         return False
     finally:
-        cursor.close()
         connection.close()
 
 # ==== File Encryption/Decryption ====
