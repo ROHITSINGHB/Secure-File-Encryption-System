@@ -1,20 +1,35 @@
 {% extends "base.html" %}
 {% block title %}Register{% endblock %}
+
 {% block content %}
-<section class="form-section">
-  <h2>Register</h2>
-  <form method="POST" id="registerForm">
-    <label for="username">Username</label>
-    <input type="text" name="username" id="username" required autofocus />
+<div class="auth-layout">
+    <div class="auth-left-panel">
+        <h1><i class="fas fa-user-plus icon"></i> Create Account</h1>
+        <p>Join SecureFile and start protecting your digital assets today.</p>
+    </div>
+    <div class="auth-right-panel">
+        <div class="auth-form-card">
+            <h2>Register</h2>
+            <p style="text-align: center; margin-top: -1rem; margin-bottom: 2rem; color: #6c757d;">
+               It's quick and easy to get started.
+            </p>
+            <form method="POST" id="registerForm">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required autofocus placeholder="Choose a unique username" />
 
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" required />
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" required placeholder="your.email@example.com"/>
 
-    <label for="email">Email</label>
-    <input type="email" name="email" id="email" required />
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Create a strong password"/>
 
-    <button type="submit">Register</button>
-  </form>
-  <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
-</section>
+                <button type="submit" id="registerButton">Register</button>
+            </form>
+            <div class="links">
+                Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
