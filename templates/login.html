@@ -1,18 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
+
 {% block content %}
-<section class="form-section">
-  <h2>Login</h2>
-  <form method="POST" id="loginForm">
-    <label for="username">Username</label>
-    <input type="text" name="username" id="username" required autofocus />
+<div class="auth-layout">
+    <div class="auth-left-panel">
+        <h1><i class="fas fa-shield-alt icon"></i> SecureFile</h1>
+        <p>Your personal digital fortress. Encrypt and protect your sensitive files with confidence.</p>
+    </div>
+    <div class="auth-right-panel">
+        <div class="auth-form-card">
+            <h2>Welcome Back!</h2>
+            <p style="text-align: center; margin-top: -1rem; margin-bottom: 2rem; color: #6c757d;">
+                Login to access your secure dashboard.
+            </p>
 
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" required />
+            <form method="POST" id="loginForm">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" placeholder="e.g., rohit.singh" required autofocus />
 
-    <button type="submit">Login</button>
-  </form>
-  <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
-  <p>Forgot password? <a href="{{ url_for('reset') }}">Reset here</a></p>
-</section>
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" placeholder="Enter your password" required />
+
+                <div style="text-align: right; margin-top: -1rem; margin-bottom: 1.5rem; font-size: 0.875rem;">
+                    <a href="{{ url_for('reset') }}">Forgot password?</a>
+                </div>
+
+                <button type="submit" id="loginButton">Login</button>
+            </form>
+
+            <div class="links">
+                Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
