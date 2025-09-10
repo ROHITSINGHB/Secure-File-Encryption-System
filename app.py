@@ -1,72 +1,159 @@
 import os
 import hashlib
 import base64
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import (
     Flask, render_template, request, redirect, url_for,
     session, flash, send_file
 )
-from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 from cryptography.fernet import Fernet
 
 # ==== Configuration ====
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "change_this_secret_key")  # Use env var in production
+app.secret_key = os.environ.get("SECRET_KEY", "change_this_secret_key")
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# === MongoDB connection ===
-# Set your MongoDB URI here; example for local MongoDB:
+# === PostgreSQL connection ===
+DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this automatically
 
-MONGO_URI = os.getenv("MONGO_URI")  # set in Render dashboard
-client = MongoClient(MONGO_URI)
-db = client["mydatabase"]
-users_col = db["users"]
+def get_db_connection():
+    """Get database connection"""
+    try:
+        connection = psycopg2.connect(DATABASE_URL)
+        return connection
+    except Exception as e:
+        print(f"Error connecting to PostgreSQL: {e}")
+        return None
 
+def init_database():
+    """Initialize database and create users table if it doesn't exist"""
+    connection = get_db_connection()
+    if connection:
+        try:
+            cursor = connection.cursor()
+            create_table_query = """
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                failed_attempts INTEGER DEFAULT 0,
+                locked BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+            cursor.execute(create_table_query)
+            connection.commit()
+            print("Database initialized successfully")
+        except Exception as e:
+            print(f"Error creating table: {e}")
+        finally:
+            cursor.close()
+            connection.close()
+
+# Initialize database on startup
+init_database()
 
 # ==== Helper Functions ====
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(username):
-    return users_col.find_one({"username": username})
+    connection = get_db_connection()
+    if connection:
+        try:
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
+            query = "SELECT * FROM users WHERE username = %s"
+            cursor.execute(query, (username,))
+            user = cursor.fetchone()
+            return dict(user) if user else None
+        except Exception as e:
+            print(f"Error getting user: {e}")
+            return None
+        finally:
+            cursor.close()
+            connection.close()
+    return None
 
 def verify_user(username, password):
     user = get_user(username)
     if not user or user.get("locked", False):
         return False
-    if user["password"] == hash_password(password):
-        users_col.update_one({"username": username}, {"$set": {"failed_attempts": 0}})
-        return True
-    else:
-        failed_attempts = user.get("failed_attempts", 0) + 1
-        update_data = {"failed_attempts": failed_attempts}
-        if failed_attempts >= 5:
-            update_data["locked"] = True
-        users_col.update_one({"username": username}, {"$set": update_data})
+    
+    connection = get_db_connection()
+    if not connection:
         return False
+    
+    try:
+        cursor = connection.cursor()
+        if user["password"] == hash_password(password):
+            # Reset failed attempts on successful login
+            query = "UPDATE users SET failed_attempts = 0 WHERE username = %s"
+            cursor.execute(query, (username,))
+            connection.commit()
+            return True
+        else:
+            # Increment failed attempts
+            failed_attempts = user.get("failed_attempts", 0) + 1
+            locked = failed_attempts >= 5
+            query = "UPDATE users SET failed_attempts = %s, locked = %s WHERE username = %s"
+            cursor.execute(query, (failed_attempts, locked, username))
+            connection.commit()
+            return False
+    except Exception as e:
+        print(f"Error verifying user: {e}")
+        return False
+    finally:
+        cursor.close()
+        connection.close()
 
 def create_user(username, password, email):
     if get_user(username):
         return False
-    user_doc = {
-        "username": username,
-        "password": hash_password(password),
-        "email": email,
-        "failed_attempts": 0,
-        "locked": False
-    }
-    users_col.insert_one(user_doc)
-    return True
+    
+    connection = get_db_connection()
+    if not connection:
+        return False
+    
+    try:
+        cursor = connection.cursor()
+        query = """
+        INSERT INTO users (username, password, email, failed_attempts, locked) 
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (username, hash_password(password), email, 0, False))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return False
+    finally:
+        cursor.close()
+        connection.close()
 
 def reset_password(username, new_password):
-    users_col.update_one({"username": username}, {
-        "$set": {
-            "password": hash_password(new_password),
-            "failed_attempts": 0,
-            "locked": False
-        }
-    })
+    connection = get_db_connection()
+    if not connection:
+        return False
+    
+    try:
+        cursor = connection.cursor()
+        query = """
+        UPDATE users SET password = %s, failed_attempts = 0, locked = FALSE 
+        WHERE username = %s
+        """
+        cursor.execute(query, (hash_password(new_password), username))
+        connection.commit()
+        return True
+    except Exception as e:
+        print(f"Error resetting password: {e}")
+        return False
+    finally:
+        cursor.close()
+        connection.close()
 
 # ==== File Encryption/Decryption ====
 class FileEncryptor:
@@ -232,4 +319,4 @@ def logout():
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',debug=True)
+    app.run(host='0.0.0.0', debug=True)
