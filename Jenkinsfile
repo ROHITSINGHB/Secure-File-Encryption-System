@@ -59,7 +59,19 @@ pipeline {
             steps {
                 echo '========== Building Docker Image =========='
                 sh '''
+                    echo "Current working directory:"
+                    pwd
+                    
+                    echo "Listing project files:"
+                    ls -la
+                    
+                    echo "Checking if Dockerfile exists:"
+                    test -f Dockerfile && echo "✅ Dockerfile found" || echo "❌ Dockerfile not found"
+                    
+                    echo "Building Docker image from current directory..."
                     docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    
+                    echo "✅ Docker image built successfully"
                     docker images | grep ${DOCKER_IMAGE}
                 '''
             }
@@ -78,7 +90,7 @@ pipeline {
                         -p 5000:5000 \
                         ${DOCKER_IMAGE}:${DOCKER_TAG}
                     
-                    echo "Container started successfully"
+                    echo "✅ Container started successfully"
                 '''
             }
         }
