@@ -447,5 +447,3 @@ Before deploying to production, verify:
 
 **Status**: ✅ Production Ready
 
-For detailed setup instructions, see **INSTALLATION.md** or visit the [GitHub Wiki](https://github.com/ROHITSINGHB/secure-file-encryption/wiki).
-
