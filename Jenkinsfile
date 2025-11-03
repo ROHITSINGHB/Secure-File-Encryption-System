@@ -87,7 +87,7 @@ pipeline {
                     
                     echo "Starting new container..."
                     docker run -d --name ${DOCKER_IMAGE} \
-                        -p 5000:5000 \
+                        -p 5001:5000 \
                         ${DOCKER_IMAGE}:${DOCKER_TAG}
                     
                     echo "✅ Container started successfully"
