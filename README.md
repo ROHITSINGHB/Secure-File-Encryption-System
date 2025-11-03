@@ -214,6 +214,4 @@ If you encounter any issues:
 
 ---
 
-**Live Demo**: [https://secure-file-encryption-system-production.up.railway.app](https://secure-file-encryption-system-production.up.railway.app)
-
-Made with ❤️ using Flask and deployed on Railway
+## Deployment with Jenkins ✅
