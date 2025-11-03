@@ -17,7 +17,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 echo '========== Cloning Repository =========='
-                git branch: 'main', 
+                git branch: 'devops',  // ← CHANGED FROM 'main'
                     url: 'https://github.com/ROHITSINGHB/Secure-File-Encryption-System.git',
                     credentialsId: 'github-credentials'
             }
