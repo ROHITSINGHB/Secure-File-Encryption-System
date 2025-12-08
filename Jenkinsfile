@@ -122,7 +122,7 @@ pipeline {
         success {
             echo '✅ Deployment Successful!'
             sh '''
-                echo "Application is running at: http://localhost:5000"
+                echo "Application is running at: http://localhost:5001"
             '''
         }
         
